@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>第5關：惜食大挑戰</title>
+  <style>
+    body {
+      font-family: "微軟正黑體", sans-serif;
+      background-color: #fffbea;
+      text-align: center;
+      margin: 0;
+      overflow: hidden;
+    }
+    h1 {
+      margin-top: 20px;
+      color: #6a994e;
+    }
+    #gameArea {
+      position: relative;
+      width: 100vw;
+      height: 80vh;
+      background-color: #fefae0;
+      overflow: hidden;
+    }
+    .food {
+      position: absolute;
+      cursor: pointer;
+      user-select: none;
+    }
+    .food img {
+      width: 50px;
+      height: 50px;
+    }
+    #scoreBoard {
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+    #result {
+      font-size: 1.4em;
+      margin-top: 20px;
+      color: #333;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      margin-top: 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    #startOverlay, #failOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #startOverlay h2, #failOverlay h2 {
+      color: #6a994e;
+      margin-bottom: 20px;
+    }
+    #startOverlay p, #failOverlay p {
+      width: 80%;
+      max-width: 400px;
+      margin-bottom: 20px;
+      color: #444;
+      font-size: 1.1em;
+    }
+    #failOverlay {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="startOverlay">
+    <h2>第5關：惜食大挑戰</h2>
+    <p>請點擊畫面中掉落的「可食用食物」圖片 🍎🍞🥕，避開「腐爛食物」。<br>你有 30 秒的時間，準備好了嗎？</p>
+    <button onclick="startGame()">開始遊戲</button>
+  </div>
+
+  <div id="failOverlay">
+    <h2>挑戰失敗 😥</h2>
+    <p>你的分數未達 10 分，請再接再厲！</p>
+    <button onclick="restartGame()">再挑戰一次</button>
+  </div>
+
+  <h1>第5關：惜食大挑戰</h1>
+  <div id="scoreBoard">分數：0｜剩餘時間：30 秒</div>
+  <div id="gameArea"></div>
+  <div id="result"></div>
+
+  <script>
+    const gameArea = document.getElementById("gameArea");
+    const scoreBoard = document.getElementById("scoreBoard");
+    const result = document.getElementById("result");
+    const startOverlay = document.getElementById("startOverlay");
+    const failOverlay = document.getElementById("failOverlay");
+
+    let score = 0;
+    let timeLeft = 30;
+    let timer;
+    let gameInterval;
+
+    const goodFoods = [
+      "images/apple.png",
+      "images/bread.png",
+      "images/radish.png",
+      "images/vegetable.png",
+      "images/rice.png"
+    ];
+
+    const badFoods = [
+      "images/trash.png",
+      "images/skull.png",
+      "images/gross.png",
+      "images/spoiled.png"
+    ];
+
+    function spawnFood() {
+      const food = document.createElement("div");
+      food.classList.add("food");
+      const isGood = Math.random() < 0.7;
+      const img = document.createElement("img");
+      img.src = isGood ? randomFrom(goodFoods) : randomFrom(badFoods);
+      food.dataset.good = isGood ? "true" : "false";
+      food.style.left = Math.random() * 90 + "vw";
+      food.style.top = "-60px";
+      food.appendChild(img);
+      gameArea.appendChild(food);
+
+      let top = -60;
+      const fall = setInterval(() => {
+        top += 3;
+        food.style.top = top + "px";
+        if (top > window.innerHeight) {
+          clearInterval(fall);
+          food.remove();
+        }
+      }, 30);
+
+      food.onclick = () => {
+        if (food.dataset.good === "true") {
+          score += 1;
+        } else {
+          score -= 1;
+        }
+        updateScore();
+        food.remove();
+      };
+    }
+
+    function randomFrom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function updateScore() {
+      scoreBoard.textContent = `分數：${score}｜剩餘時間：${timeLeft} 秒`;
+    }
+
+    function endGame() {
+      clearInterval(timer);
+      clearInterval(gameInterval);
+      if (score >= 10) {
+        result.innerHTML = `🎉 太棒了！你是惜食高手，得分：${score} 分！<br><a href="index.html"><button>返回首頁</button></a>`;
+      } else {
+        failOverlay.style.display = "flex";
+      }
+    }
+
+    function startGame() {
+  document.getElementById("bgm").play();
+      score = 0;
+      timeLeft = 30;
+      result.innerHTML = "";
+      gameArea.innerHTML = "";
+      failOverlay.style.display = "none";
+      startOverlay.style.display = "none";
+      updateScore();
+      timer = setInterval(() => {
+        timeLeft--;
+        updateScore();
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+      gameInterval = setInterval(spawnFood, 600);
+    }
+
+    function restartGame() {
+      document.querySelectorAll(".food").forEach(el => el.remove());
+      result.innerHTML = "";
+      gameArea.innerHTML = "";
+      startGame();
+    }
+  </script>
+<audio id="bgm" src="Carefree.mp3" loop hidden></audio>
+</body>
+</html>

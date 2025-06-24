@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>飢餓終結者</title>
+  <style>
+    body {
+      font-family: "微軟正黑體", sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-image: url("images/bgpicture.png");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    .hidden { display: none; }
+    h1 { font-size: 2.5em; color: #333; }
+    .food-item, .quiz-food {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px;
+      background-color: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .quiz-food {
+      font-size: 2em;
+      width: 100px;
+      height: 100px;
+      line-height: 100px;
+    }
+    .quiz-food.disabled {
+      background-color: #e0e0e0;
+      pointer-events: none;
+    }
+    .region {
+      display: inline-block;
+      width: 300px;
+      margin: 15px;
+      padding: 15px;
+      border: 2px dashed #6c757d;
+      background-color: rgba(255,255,255,0.8);
+      border-radius: 10px;
+      vertical-align: top;
+    }
+    .region img.village {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .dropzone {
+      min-height: 80px;
+      padding: 10px;
+      background-color: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .dropzone img.food {
+      width: 50px;
+      height: 50px;
+      margin: 5px;
+      object-fit: contain;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      margin-top: 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background-color: #218838; }
+
+    #quiz-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid #ccc;
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 999;
+      max-width: 300px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    #quiz-popup.hidden {
+      display: none;
+    }
+    #quiz-options button {
+      margin: 5px;
+      padding: 8px 12px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+    <div id="level1">
+    <h1>飢餓終結者：分配挑戰</h1>
+    <h2>第1關：基礎熱量配給</h2>
+    <p>請將食物拖拉到兩個村莊中，讓每個村莊獲得至少 <strong>800 卡</strong> 熱量</p>
+
+    <div id="food-items">
+      <div class="food-item" draggable="true" data-calories="300" data-src="images/rice.png">🍚 白飯 (300卡)</div>
+      <div class="food-item" draggable="true" data-calories="500" data-src="images/chicken.png">🍗 雞肉 (500卡)</div>
+      <div class="food-item" draggable="true" data-calories="200" data-src="images/vegetable.png">🥦 蔬菜 (200卡)</div>
+      <div class="food-item" draggable="true" data-calories="400" data-src="images/bread.png">🍞 麵包 (400卡)</div>
+      <div class="food-item" draggable="true" data-calories="250" data-src="images/banana.png">🍌 香蕉 (250卡)</div>
+      <div class="food-item" draggable="true" data-calories="450" data-src="images/cheese.png">🧀 起司 (450卡)</div>
+      <div class="food-item" draggable="true" data-calories="350" data-src="images/sushi.png">🍣 壽司 (350卡)</div>
+      <div class="food-item" draggable="true" data-calories="600" data-src="images/fries.png">🍟 薯條 (600卡)</div>
+    </div>
+
+    <div class="region" data-goal="800">
+      <h3>村莊 A</h3>
+      <img src="images/villageA.png" alt="村莊 A 圖片" class="village">
+      <div class="dropzone" id="zone-a"></div>
+      <p>已分配：<span class="total">0</span> 卡</p>
+    </div>
+
+    <div class="region" data-goal="800">
+      <h3>村莊 B</h3>
+      <img src="images/villageB.png" alt="村莊 B 圖片" class="village">
+      <div class="dropzone" id="zone-b"></div>
+      <p>已分配：<span class="total">0</span> 卡</p>
+    </div>
+
+    <button onclick="checkLevel1()">確認分配結果</button>
+  </div>
+
+  <div id="level2" class="hidden">
+    <h2>第2關：營養均衡</h2>
+    <p>請為每個村莊分配食物並確保至少有一項「含蛋白質」的食物。<br>一定要分配有蛋白質的食物來保持兩個村莊營養均衡</p>
+    <div id="protein-food-items">
+      <div class="food-item" draggable="true" data-calories="400" data-protein="true" data-src="images/beef.png">🥩 牛肉</div>
+      <div class="food-item" draggable="true" data-calories="300" data-protein="true" data-src="images/egg.png">🥚 雞蛋</div>
+      <div class="food-item" draggable="true" data-calories="250" data-protein="true" data-src="images/milk.png">🥛 牛奶</div>
+      <div class="food-item" draggable="true" data-calories="500" data-protein="true" data-src="images/chicken.png">🍗 雞肉</div>
+      <div class="food-item" draggable="true" data-calories="150" data-protein="false" data-src="images/spinach.png">🥬 菠菜</div>
+      <div class="food-item" draggable="true" data-calories="100" data-protein="false" data-src="images/radish.png">🥕 蘿蔔</div>
+      <div class="food-item" draggable="true" data-calories="300" data-protein="false" data-src="images/rice.png">🍚 白飯</div>
+      <div class="food-item" draggable="true" data-calories="200" data-protein="false" data-src="images/vegetable.png">🥦 蔬菜</div>
+      <div class="food-item" draggable="true" data-calories="400" data-protein="false" data-src="images/bread.png">🍞 麵包</div>
+    </div>
+
+    <div class="region" data-goal="0">
+      <h3>村莊 A</h3>
+      <img src="images/villageA.png" alt="村莊 A 圖片" class="village">
+      <div class="dropzone" id="zone2-a"></div>
+    </div>
+
+    <div class="region" data-goal="0">
+      <h3>村莊 B</h3>
+      <img src="images/villageB.png" alt="村莊 B 圖片" class="village">
+      <div class="dropzone" id="zone2-b"></div>
+    </div>
+
+    <button onclick="checkLevel2()">確認營養分配</button>
+  </div>
+
+  <div id="level3" class="hidden">
+    <h2>第3關：營養知識挑戰</h2>
+    <p>點選以下食物，回答與 SDG 2 有關的問題。答對至少 3 題即可過關！</p>
+    <div id="quiz-foods">
+      <div class="quiz-food" onclick="askQuestion(0)">🥕</div>
+      <div class="quiz-food" onclick="askQuestion(1)">🍗</div>
+      <div class="quiz-food" onclick="askQuestion(2)">🍞</div>
+      <div class="quiz-food" onclick="askQuestion(3)">🍚</div>
+      <div class="quiz-food" onclick="askQuestion(4)">🥦</div>
+    </div>
+    <button id="retryBtn" class="hidden" onclick="restartGame()">重新挑戰</button>
+
+  <!-- quiz-popup -->
+  <div id="quiz-popup" class="hidden">
+    <p id="quiz-question"></p>
+    <div id="quiz-options"></div>
+  </div>
+
+  <script>
+    let correctAnswers = 0;
+    const quizAnswered = Array(5).fill(false);
+    const quizQuestions = [
+      { q: "什麼是 SDG 2 的主要目標？", a: ["消除飢餓", "減少碳排放", "提升教育水準"], correct: 0 },
+      { q: "哪一種行動有助於糧食安全？", a: ["建立在地農場", "提高進口關稅", "減少灌溉"], correct: 0 },
+      { q: "以下哪一項不是蛋白質來源？", a: ["魚", "紅蘿蔔", "豆類"], correct: 1 },
+      { q: "誰容易受到糧食短缺的影響？", a: ["偏鄉地區居民", "大企業", "富裕家庭"], correct: 0 },
+      { q: "為什麼均衡飲食很重要？", a: ["促進健康與成長", "只是潮流", "便宜"], correct: 0 }
+    ];
+
+    function askQuestion(index) {
+      if (quizAnswered[index]) return;
+
+      const q = quizQuestions[index];
+      const popup = document.getElementById('quiz-popup');
+      const questionText = document.getElementById('quiz-question');
+      const optionsDiv = document.getElementById('quiz-options');
+
+      questionText.textContent = q.q;
+      optionsDiv.innerHTML = '';
+
+      q.a.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.onclick = () => handleAnswer(index, i);
+        optionsDiv.appendChild(btn);
+      });
+
+      popup.classList.remove('hidden');
+    }
+
+    function handleAnswer(index, choice) {
+      const correct = quizQuestions[index].correct;
+      document.getElementById('quiz-popup').classList.add('hidden');
+
+      if (choice === correct) {
+        alert("答對了！");
+        correctAnswers++;
+      } else {
+        alert("答錯了！");
+      }
+
+      quizAnswered[index] = true;
+      document.querySelectorAll('.quiz-food')[index].classList.add('disabled');
+
+      if (correctAnswers >= 3) {
+        alert("恭喜你完成第三關！");
+        window.location.href = "level4.html"; // 導向第四關頁面
+      } else if (quizAnswered.every(x => x)) {
+        document.getElementById('retryBtn').classList.remove('hidden');
+      }
+    }
+
+       function restartGame() {
+      location.reload();
+    }
+
+    function checkLevel1() {
+  document.getElementById("bgm").play();
+      let success = true;
+      document.querySelectorAll('#level1 .region').forEach(region => {
+        const goal = parseInt(region.dataset.goal);
+        const total = parseInt(region.querySelector('.total').textContent);
+        if (total < goal) success = false;
+      });
+      if (success) {
+        alert("第1關完成！");
+        document.getElementById('level1').classList.add('hidden');
+        document.getElementById('level2').classList.remove('hidden');
+      } else {
+        alert("請再檢查熱量分配！");
+      }
+    }
+
+    function checkLevel2() {
+      let valid = true;
+      document.querySelectorAll('#level2 .region').forEach(region => {
+        const proteins = region.querySelectorAll('img[data-protein="true"]').length;
+        if (proteins === 0) valid = false;
+      });
+      if (valid) {
+        alert("第2關完成！");
+        document.getElementById('level2').classList.add('hidden');
+        document.getElementById('level3').classList.remove('hidden');
+      } else {
+        alert("每個村莊都必須至少分配一種含蛋白質的食物！");
+      }
+    }
+
+    document.querySelectorAll('.food-item').forEach(item => {
+      item.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('calories', item.dataset.calories);
+        e.dataTransfer.setData('src', item.dataset.src);
+        e.dataTransfer.setData('protein', item.dataset.protein);
+        item.classList.add('used');
+      });
+    });
+
+    document.querySelectorAll('.dropzone').forEach(zone => {
+      zone.addEventListener('dragover', e => e.preventDefault());
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        const calories = parseInt(e.dataTransfer.getData('calories'));
+        const src = e.dataTransfer.getData('src');
+        const protein = e.dataTransfer.getData('protein') === 'true';
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'food';
+        if (protein) img.setAttribute('data-protein', 'true');
+        zone.appendChild(img);
+
+        const totalEl = zone.parentElement.querySelector('.total');
+        if (totalEl) totalEl.textContent = parseInt(totalEl.textContent) + calories;
+
+        const dragged = [...document.querySelectorAll('.food-item')].find(el => el.dataset.src === src && !el.classList.contains('used-done'));
+        if (dragged) {
+          dragged.classList.add('used-done');
+          dragged.setAttribute('draggable', 'false');
+          dragged.style.opacity = '0.5';
+        }
+      });
+    });
+
+  </script>
+<audio id="bgm" src="Carefree.mp3" loop hidden></audio>
+</body>
+</html>
